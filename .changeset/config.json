@@ -1,0 +1,12 @@
+{
+  "name": "vibe",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Vibe is an autonomous website modernization platform.",
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "scripts": {
+    "bootstrap": "node tools/scripts/bootstrap.mjs"
+  }
+}

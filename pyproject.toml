@@ -1,0 +1,198 @@
+[project]
+name = "gouplevelvibecoding"
+version = "0.0.0"
+description = "Autonomous website modernization platform (Vibe)."
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "Vibe Engineering" }]
+
+# ----- uv workspace members -----
+# Apps: HTTP servers + workers (deployed units).
+# Packages: shared libraries (imported by apps).
+# Services: long-running processes (also imported, never deploy standalone).
+[tool.uv.workspace]
+members = [
+  "apps/*",
+  "packages/py/*",
+  "services/*",
+  "tools/cli",
+]
+exclude = [
+  "apps/web",
+  "packages/ts",
+]
+
+[tool.uv.sources]
+# Workspace sources resolve to editable installs across the monorepo.
+"vibe-core"        = { workspace = true }
+"vibe-models"      = { workspace = true }
+"vibe-db"          = { workspace = true }
+"vibe-observability" = { workspace = true }
+"vibe-auth"        = { workspace = true }
+"vibe-billing"     = { workspace = true }
+"vibe-integrations" = { workspace = true }
+"vibe-test"        = { workspace = true }
+
+# ----- Python tooling (ruff) -----
+# Configured here at the root for the whole workspace. Individual packages
+# may add to `select`/`ignore` in their own pyproject.toml.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+  ".venv",
+  "build",
+  "dist",
+  "node_modules",
+  "tests/fixtures/sites",
+]
+
+[tool.ruff.lint]
+# See https://docs.astral.sh/ruff/rules/ for the full list.
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+  "SIM", # flake8-simplify
+  "C4",  # flake8-comprehensions
+  "PT",  # flake8-pytest-style
+  "RUF", # ruff-specific
+  "ASYNC", # flake8-async
+  "S",   # flake8-bandit (security)
+  "TID", # flake8-tidy-imports
+  "TCH", # flake8-type-checking
+  "PIE", # flake8-pie
+  "RET", # flake8-return
+  "YTT", # flake8-2020
+  "N",   # pep8-naming
+]
+ignore = [
+  "E501",   # line length handled by formatter
+  "B008",   # function call in default argument (Pydantic uses this)
+  "S101",   # assert in tests
+  "S104",   # hardcoded bind in 0.0.0.0 (intentional for dev)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101", "S105", "S106", "S107"]
+"**/alembic/**/*.py" = ["UP", "E", "F"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "vibe_core", "vibe_models", "vibe_db", "vibe_observability",
+  "vibe_auth", "vibe_billing", "vibe_integrations", "vibe_test",
+  "vibe_api", "vibe_orchestrator", "vibe_capture", "vibe_analysis",
+  "vibe_generation", "vibe_deploy", "vibe_delivery", "vibe_billing_worker",
+  "vibe_scheduler", "vibe_notifier",
+]
+combine-as-imports = true
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ----- mypy -----
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = []
+mypy_path = "packages/py/vibe_core/src:packages/py/vibe_models/src:packages/py/vibe_db/src:packages/py/vibe_observability/src:packages/py/vibe_auth/src:packages/py/vibe_billing/src:packages/py/vibe_integrations/src:packages/py/vibe_test/src"
+namespace_packages = true
+explicit_package_bases = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["alembic.*"]
+ignore_errors = true
+
+# ----- pytest -----
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = [
+  "packages/py/vibe_core/src",
+  "packages/py/vibe_models/src",
+  "packages/py/vibe_db/src",
+  "packages/py/vibe_observability/src",
+  "packages/py/vibe_auth/src",
+  "packages/py/vibe_billing/src",
+  "packages/py/vibe_integrations/src",
+  "packages/py/vibe_test/src",
+  "apps/api/src",
+  "apps/orchestrator/src",
+  "apps/capture-worker/src",
+  "apps/analysis-worker/src",
+  "apps/generation-worker/src",
+  "apps/deploy-worker/src",
+  "apps/delivery-worker/src",
+  "apps/billing-worker/src",
+  "apps/scheduler/src",
+  "apps/notifier/src",
+  "services/browser-pool/src",
+  "services/llm-router/src",
+  "services/rate-limiter/src",
+  "services/feature-flags/src",
+  "tools/cli/src",
+]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--showlocals",
+  "--tb=short",
+]
+markers = [
+  "slow: marks tests as slow (deselect with -m 'not slow')",
+  "e2e: marks tests as end-to-end (require docker compose stack)",
+  "integration: marks tests as integration (require external services)",
+]
+filterwarnings = [
+  "error",
+  "ignore::DeprecationWarning:botocore.*",
+  "ignore::DeprecationWarning:pkg_resources.*",
+]
+
+# ----- Coverage -----
+[tool.coverage.run]
+branch = true
+source = ["vibe_core", "vibe_models", "vibe_observability"]
+omit = [
+  "*/tests/*",
+  "*/alembic/*",
+  "*/migrations/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+show_missing = true
+fail_under = 70
+
+# ----- Build system (PEP 517) -----
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vibe_core"]

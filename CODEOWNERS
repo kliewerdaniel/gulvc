@@ -1,0 +1,40 @@
+# Default code owners. Update as the team grows.
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Everything defaults to platform
+*                                       @vibe/platform
+
+# Core docs and ADRs
+/docs/                                  @vibe/platform
+/ADR/                                   @vibe/platform
+/LEDGER.md                              @vibe/platform
+
+# Capture engine
+/apps/capture-worker/                   @vibe/capture
+/packages/py/vibe_integrations/         @vibe/capture
+/services/browser-pool/                 @vibe/capture
+
+# Analysis engine
+/apps/analysis-worker/                  @vibe/agents
+/services/llm-router/                   @vibe/agents
+
+# Generation engine
+/apps/generation-worker/                @vibe/generation
+
+# Deployment engine
+/apps/deploy-worker/                    @vibe/deployment
+/infra/                                 @vibe/deployment
+
+# Billing
+/apps/billing-worker/                   @vibe/billing
+/packages/py/vibe_billing/              @vibe/billing
+
+# Security-sensitive files
+/packages/py/vibe_auth/                 @vibe/security
+/docs/17-security-model.md              @vibe/security
+/infra/threat-model/                    @vibe/security
+
+# CI / workflow changes
+/.github/                               @vibe/platform
+/Makefile                               @vibe/platform
+/turbo.json                             @vibe/platform
